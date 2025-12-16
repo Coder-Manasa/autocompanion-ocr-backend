@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "vehicle-authentication-acc85",
+  "private_key_id": "81c8e7a8f7996d13d8e308727d86234d8cf80510",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDOgvWZiZW/Ak7G\nMqeKGikvpUzMn2rjIDDcavV8Doo4z/lCVUDJZ316wBG3sP65XSXP6xy6Fv29RtDz\ncApoMHitPMTK7oRK0jfMLBThRtwy5LhGsh7qNVFDGEqKgqB2/QNwuak0e4s/FN+y\nyDyKG7FZ3E3jBWsfVANmWzAPntSQP856Mf8oX6ongL4mo+pgJtu/v8Nju+6HMwwF\nal1ecw2yXmnkOXZje32mSnhxwvWXdAhDI48AnbTRI0oZ7iFrQMEPHHzTBeWqlJzs\naE6My76neQicck9GwcQ/jVy6pcK9988lg4rZjKIzH2QnuX7zDdS9S52VywW+Slql\n/pmf1GoDAgMBAAECggEAHxAv5VJ+xeaQ9tszvGBHBbW1oanxKAz1jJJCLtD5Faai\n9clhH2qDw20UvS7Qgg1y3J2fCpbewBPg5l1aE2YHIPfdGjFakO6iGgIfeetwv+8L\nkQbGA7DVcmQ7Ai63+G4CkHg87XoP7gMzyu63vIaB3OR4iseL34CBqmnZBuB7VN8e\n6q7HTKSByvWU1ERqhQSK02WmOWbItbDFxgljQGF/RxrvX8Hc4L5oBAp4LQDe5LQa\nPByn1MdXhtSLoqK2lh3KzftZZLSRQBbBkXm1fclGNzF0GOdhP0C4qYHS3RjLx83k\nzFVwvvYfFQkosqUvqVa9xJZhXBBISe7rz5sWGiBIwQKBgQDx+6toyw2n1xgpJj4A\nK2bzP7Znbe36NBlmQIFSaw8FYucgtDju1Lj3mvpTE3n+F4oSsuf5NS+ofjZu3XsI\niWcJV0JQ8tbQ1Z+xdrAi+qBEljDX7sfn34K9WGBRMjFh+PtGxGBg5b739bHgl8bI\n1i8xp1LVdJKF838PoKaMN7WZ8wKBgQDaeUm3kVCYbWfpj0w8v9zXag390nX4J9mE\nxJGL6ufOik4+KKWSCIUdHmnZcwhpQP3g/ZcMb0Mjy5L+DjdWWs2XoGymwipAmR/h\niKS4cElkjaEFj5t+cncscqrhSK8mAzdPczSWO0x+ykar7D568TtRGAui7lTLxWnC\n07hnb1RjsQKBgGTmWtfsazpEDzgBUTMC5f+h3m4MQYHlvX2MgiAasf29+sABRggY\nPTRJs/12DpUrvZAEd4PLcJ7iWdIqmgW6PXOApg9Y4sfbe6Yk5lb/iFpxAdbYIxUF\ndt96/VZ+BmdiyWv9sG5W/iUols4em23dGXqr2XdWD065dI7QnwGyrQ+PAoGAJL4t\nRbAsy9Xqmf89pSHndFsjy0JwELIzBP9CMzPolHXyPsX7QpooOQN6bdXI3lrN198O\nXksAEa8VI6EkcWOIHC4g19Lj5EVcdUPT4CkSTtT69cJ3NkbuAA2w636b5lq4HKaV\ne4axkMlYJWXwBCE6BqNyoY5PuI2VAe01oD+7A6ECgYEAplCdSS9VKYKdApnQCW0f\nC0c5yIyDLKbA9GTxXyuyNLp09HzTkUGs4yXJ2dOTYrormWFEL/pUmZbzRwNnHT9b\nnuda0kc5WxdCLrrdLq7JD+fJiEx6KvcqpBF0De0a0jOitUQbVDhP6owFdn8lV90e\nMYgVsaSM6PaU3mANQJ+J3AQ=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@vehicle-authentication-acc85.iam.gserviceaccount.com",
+  "client_id": "116957598621835726979",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40vehicle-authentication-acc85.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
