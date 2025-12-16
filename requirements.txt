@@ -1,10 +1,8 @@
 flask
 flask-cors
+requests
+pytesseract
+opencv-python-headless
+numpy
+Pillow
 google-generativeai
-python-dotenv
-requests
-fastapi
-uvicorn[standard]
-requests
-pydantic-settings
-python-dotenv
