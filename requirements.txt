@@ -1,6 +1,10 @@
+flask
+flask-cors
+google-generativeai
+python-dotenv
+requests
 fastapi
 uvicorn[standard]
 requests
 pydantic-settings
 python-dotenv
-firebase-admin
