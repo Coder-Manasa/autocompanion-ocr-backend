@@ -9,7 +9,8 @@ import google.generativeai as genai
 # ================== CONFIGURE GEMINI ==================
 
 # ❗ PUT YOUR VALID GEMINI API KEY HERE
-GEMINI_API_KEY = "AIzaSyA2HqvjsIpmXJXVz_3q69W9M_vONGdca3I"
+GEMINI_API_KEY = os.environ.get("AIzaSyA2HqvjsIpmXJXVz_3q69W9M_vONGdca3I")
+
 
 if not GEMINI_API_KEY or GEMINI_API_KEY.startswith("PUT_"):
     raise ValueError("Please set your Gemini API key in GEMINI_API_KEY")
@@ -134,4 +135,5 @@ def ai_tour_plan():
 # ================== MAIN ==================
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
