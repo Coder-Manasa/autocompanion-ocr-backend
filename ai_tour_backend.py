@@ -1,35 +1,38 @@
 # ai_tour_backend.py
-# Simple Flask backend for AI Tour Planner using Gemini
+# Simple Flask backend for AI Tour Planner + OCR using Gemini
 
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as genai
+import requests
+from PIL import Image
+from io import BytesIO
+import pytesseract
+import re
+
 
 # ================== CONFIGURE GEMINI ==================
 
-# ❗ PUT YOUR VALID GEMINI API KEY HERE
-GEMINI_API_KEY = os.environ.get("AIzaSyA2HqvjsIpmXJXVz_3q69W9M_vONGdca3I")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# if not GEMINI_API_KEY or GEMINI_API_KEY.startswith("PUT_"):
-#     raise ValueError("Please set your Gemini API key in GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    raise ValueError("Please set your Gemini API key in GEMINI_API_KEY")
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-MODEL_NAME = "models/gemini-2.5-flash"   # Works with your key
+MODEL_NAME = "models/gemini-2.5-flash"
+
 
 # ================== FLASK APP SETUP ==================
 
 app = Flask(__name__)
-CORS(app)  # allow calls from Flutter / localhost etc.
+CORS(app)
+
 
 # ================== HELPER: BUILD PROMPT ==================
 
-
 def build_tour_prompt(data: dict) -> str:
-    """
-    Build a natural language prompt for Gemini based on user inputs.
-    """
     destination = data.get("destination", "Unknown place")
     start_date = data.get("start_date", "Not specified")
     end_date = data.get("end_date", "Not specified")
@@ -43,7 +46,7 @@ def build_tour_prompt(data: dict) -> str:
 
     interests_text = ", ".join(interests) if interests else "general sightseeing"
 
-    prompt = f"""
+    return f"""
 You are an AI tour planner assistant for an app called AutoCompanion.
 
 Plan a road trip itinerary.
@@ -61,73 +64,98 @@ Details:
 - Preferred pace: {pace}
 
 Requirements:
-1. Provide a **day-wise itinerary** (Day 1, Day 2, etc.).
-2. For each day include:
-   - Main places to visit (with short description)
-   - Suggested timings (morning / afternoon / evening)
-   - Approx travel time between places
-   - Food / rest suggestions if needed
-3. Format cleanly with headings.
+1. Provide a day-wise itinerary.
+2. Include places, timings, travel time.
+3. Add food/rest suggestions.
 
-At the end provide:
-- A short trip summary
-- 3 to 5 travel safety tips
+End with summary and safety tips.
 """
 
-    return prompt
 
-
-# ================== ROUTE: HEALTH CHECK ==================
-
+# ================== ROUTE: HEALTH ==================
 
 @app.get("/ping")
 def ping():
-    return jsonify({"status": "ok", "message": "AI Tour Planner backend is running"})
+    return jsonify({"status": "ok"})
 
 
-# ================== ROUTE: AI TOUR PLANNER ==================
-
+# ================== ROUTE: AI TOUR ==================
 
 @app.post("/api/ai-tour-plan")
 def ai_tour_plan():
-    """
-    Expects JSON body like:
-    {
-      "start_location": "Bangalore",
-      "destination": "Goa",
-      "start_date": "2025-12-20",
-      "end_date": "2025-12-24",
-      "days": 4,
-      "budget": "₹15,000 per person",
-      "travelers": 2,
-      "vehicle_type": "car",
-      "interests": ["beach", "sunset", "local food"],
-      "pace": "relaxed"
-    }
-    """
     try:
         data = request.get_json(force=True) or {}
-    except:
-        return jsonify({"error": "Invalid JSON body"}), 400
+        prompt = build_tour_prompt(data)
 
-    # Build prompt
-    prompt = build_tour_prompt(data)
-
-    try:
         model = genai.GenerativeModel(MODEL_NAME)
         response = model.generate_content(prompt)
 
-        text = response.text if hasattr(response, "text") else str(response)
-
         return jsonify({
             "success": True,
-            "itinerary": text
+            "itinerary": response.text
         })
+
     except Exception as e:
-        print("Error calling Gemini:", e)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ================== ROUTE: OCR ==================
+
+@app.post("/ocr-url")
+def ocr_from_url():
+    try:
+        data = request.get_json(force=True)
+        image_url = data.get("file_url")
+
+        if not image_url:
+            return jsonify({"success": False, "error": "file_url missing"}), 400
+
+        # Download image
+        response = requests.get(image_url, timeout=15)
+        image = Image.open(BytesIO(response.content))
+
+        # OCR extract
+        extracted_text = pytesseract.image_to_string(image)
+
+        # ✅ IMPROVED EXPIRY DATE LOGIC (supports till / to / ranges)
+        # ✅ FIXED EXPIRY DATE LOGIC (returns full date, not just day)
+
+        patterns = [
+            # from 01/06/2023 to 31/05/2024  → take END date
+            r'(?:from\s+)?\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*(?:to|till|-)\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+
+            # valid till / valid upto / expiry date
+            r'(?:valid\s*(?:till|upto|to)|expiry\s*date|validity)[:\s]*'
+            r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+
+            # FULL capture: 28th of May 2024
+            r'(\d{1,2}(?:st|nd|rd|th)?\s+of\s+'
+            r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4})',
+
+            # FULL capture: 28 May 2024
+            r'(\d{1,2}\s+'
+            r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4})'
+        ]
+
+        expiry_date = "Not detected"
+        for pattern in patterns:
+            match = re.search(pattern, extracted_text, re.IGNORECASE)
+            if match:
+                expiry_date = match.group(1)
+                break
+
+
+                return jsonify({
+            "success": True,
+            "expiry_date": expiry_date,
+            "extracted_text": extracted_text
+        })
+
+    except Exception as e:
         return jsonify({
             "success": False,
-            "error": str(e)
+            "expiry_date": "Not detected",
+            "extracted_text": f"OCR error: {e}"
         }), 500
 
 

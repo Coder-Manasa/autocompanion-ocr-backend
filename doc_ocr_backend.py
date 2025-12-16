@@ -42,31 +42,39 @@ def preprocess_image(img):
 # -----------------------------------
 # EXPIRY DATE EXTRACTION
 # -----------------------------------
+# -----------------------------------
+# EXPIRY DATE EXTRACTION (FIXED)
+# -----------------------------------
 def extract_expiry(text):
     text = text.replace("\n", " ")
 
     patterns = [
-        r"(expiry\s*date|valid\s*upto|valid\s*till|expires)[^\d]*"
-        r"(\d{1,2}(st|nd|rd|th)?\s*(of\s*)?"
-        r"(January|February|March|April|May|June|July|August|September|October|November|December)"
+        # expiry / valid till / valid upto / expires → FULL DATE
+        r"(?:expiry\s*date|valid\s*upto|valid\s*till|expires)[^\d]*"
+        r"(\d{1,2}(?:st|nd|rd|th)?\s*(?:of\s*)?"
+        r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
         r"[,\s]*\d{4})",
 
-        r"(\d{1,2}(st|nd|rd|th)?\s*"
-        r"(January|February|March|April|May|June|July|August|September|October|November|December)"
+        # 28th May 2024
+        r"(\d{1,2}(?:st|nd|rd|th)?\s*"
+        r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
         r"\s*\d{4})",
 
-        r"((January|February|March|April|May|June|July|August|September|October|November|December)"
+        # May 28 2024
+        r"((?:January|February|March|April|May|June|July|August|September|October|November|December)"
         r"\s*\d{1,2}\s*\d{4})",
 
+        # 28/05/2024 or 28-05-2024
         r"(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})",
 
+        # 2024/05/28
         r"(\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})"
     ]
 
     for p in patterns:
         m = re.search(p, text, re.IGNORECASE)
         if m:
-            return m.group(2 if m.lastindex and m.lastindex >= 2 else 1)
+            return m.group(1)   # ✅ ALWAYS FULL DATE
 
     return None
 

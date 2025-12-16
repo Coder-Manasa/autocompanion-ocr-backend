@@ -2,10 +2,18 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # ✅ REQUIRED for Web (CORS)
+CORS(
+    app,
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=False,
+)
+  # ✅ REQUIRED for Web (CORS)
 
-@app.route("/ocr-url", methods=["POST"])
+@app.route("/ocr-url", methods=["POST", "OPTIONS"])
+
 def ocr():
+    if request.method == "OPTIONS":
+     return "", 200
     data = request.json
     file_url = data.get("file_url")
     doc_type = data.get("doc_type")

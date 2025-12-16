@@ -1,9 +1,0 @@
-flask
-flask-cors
-python-dotenv
-requests
-pillow
-pytesseract
-opencv-python-headless
-google-generativeai
-firebase-admin
