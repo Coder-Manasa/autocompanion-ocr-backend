@@ -12,7 +12,7 @@ import google.generativeai as genai
 
 # ================== CONFIGURE GEMINI ==================
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_API_KEY = os.environ.get("AIzaSyA2HqvjsIpmXJXVz_3q69W9M_vONGdca3I")
 
 if not GEMINI_API_KEY:
     raise ValueError("Please set GEMINI_API_KEY")
