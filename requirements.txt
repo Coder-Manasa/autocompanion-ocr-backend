@@ -1,8 +1,4 @@
 flask
 flask-cors
 requests
-pytesseract
-opencv-python-headless
-numpy
-Pillow
 google-generativeai

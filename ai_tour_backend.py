@@ -1,15 +1,13 @@
 # ai_tour_backend.py
-# Simple Flask backend for AI Tour Planner + OCR using Gemini
+# Flask backend for AI Tour Planner + OCR using Gemini Vision
 
 import os
+import re
+import base64
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as genai
-import requests
-from PIL import Image
-from io import BytesIO
-import pytesseract
-import re
 
 
 # ================== CONFIGURE GEMINI ==================
@@ -17,77 +15,46 @@ import re
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 if not GEMINI_API_KEY:
-    raise ValueError("Please set your Gemini API key in GEMINI_API_KEY")
+    raise ValueError("Please set GEMINI_API_KEY")
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-MODEL_NAME = "models/gemini-2.5-flash"
+TEXT_MODEL = "models/gemini-1.5-flash"
+VISION_MODEL = "models/gemini-1.5-flash"
 
 
-# ================== FLASK APP SETUP ==================
+# ================== FLASK APP ==================
 
 app = Flask(__name__)
 CORS(app)
 
 
-# ================== HELPER: BUILD PROMPT ==================
-
-def build_tour_prompt(data: dict) -> str:
-    destination = data.get("destination", "Unknown place")
-    start_date = data.get("start_date", "Not specified")
-    end_date = data.get("end_date", "Not specified")
-    days = data.get("days", None)
-    budget = data.get("budget", "Not specified")
-    travelers = data.get("travelers", 1)
-    start_location = data.get("start_location", "User's home")
-    vehicle_type = data.get("vehicle_type", "car")
-    interests = data.get("interests", [])
-    pace = data.get("pace", "normal")
-
-    interests_text = ", ".join(interests) if interests else "general sightseeing"
-
-    return f"""
-You are an AI tour planner assistant for an app called AutoCompanion.
-
-Plan a road trip itinerary.
-
-Details:
-- Start location: {start_location}
-- Destination: {destination}
-- Start date: {start_date}
-- End date: {end_date}
-- Approx days: {days if days else "calculate based on dates if possible"}
-- Vehicle type: {vehicle_type}
-- Number of travelers: {travelers}
-- Budget: {budget}
-- User interests: {interests_text}
-- Preferred pace: {pace}
-
-Requirements:
-1. Provide a day-wise itinerary.
-2. Include places, timings, travel time.
-3. Add food/rest suggestions.
-
-End with summary and safety tips.
-"""
-
-
-# ================== ROUTE: HEALTH ==================
+# ================== HEALTH ==================
 
 @app.get("/ping")
 def ping():
     return jsonify({"status": "ok"})
 
 
-# ================== ROUTE: AI TOUR ==================
+# ================== AI TOUR ==================
 
 @app.post("/api/ai-tour-plan")
 def ai_tour_plan():
     try:
         data = request.get_json(force=True) or {}
-        prompt = build_tour_prompt(data)
 
-        model = genai.GenerativeModel(MODEL_NAME)
+        prompt = f"""
+Plan a road trip itinerary.
+
+Destination: {data.get("destination")}
+Start date: {data.get("start_date")}
+End date: {data.get("end_date")}
+Vehicle: {data.get("vehicle_type")}
+Budget: {data.get("budget")}
+Interests: {', '.join(data.get("interests", []))}
+"""
+
+        model = genai.GenerativeModel(TEXT_MODEL)
         response = model.generate_content(prompt)
 
         return jsonify({
@@ -99,7 +66,7 @@ def ai_tour_plan():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# ================== ROUTE: OCR ==================
+# ================== OCR USING GEMINI VISION ==================
 
 @app.post("/ocr-url")
 def ocr_from_url():
@@ -111,41 +78,49 @@ def ocr_from_url():
             return jsonify({"success": False, "error": "file_url missing"}), 400
 
         # Download image
-        response = requests.get(image_url, timeout=15)
-        image = Image.open(BytesIO(response.content))
+        img_bytes = requests.get(image_url, timeout=15).content
+        img_base64 = base64.b64encode(img_bytes).decode("utf-8")
 
-        # OCR extract
-        extracted_text = pytesseract.image_to_string(image)
+        model = genai.GenerativeModel(VISION_MODEL)
 
-        # ✅ IMPROVED EXPIRY DATE LOGIC (supports till / to / ranges)
-        # ✅ FIXED EXPIRY DATE LOGIC (returns full date, not just day)
+        prompt = """
+Extract all readable text from this document.
+Then clearly identify the EXPIRY DATE if present.
+If multiple dates exist, choose the FINAL VALIDITY / EXPIRY date.
+Return plain text only.
+"""
+
+        response = model.generate_content([
+            prompt,
+            {
+                "mime_type": "image/jpeg",
+                "data": img_base64
+            }
+        ])
+
+        extracted_text = response.text.strip()
+
+        # ================== EXPIRY DATE PARSING ==================
 
         patterns = [
-            # from 01/06/2023 to 31/05/2024  → take END date
-            r'(?:from\s+)?\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*(?:to|till|-)\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
-
-            # valid till / valid upto / expiry date
-            r'(?:valid\s*(?:till|upto|to)|expiry\s*date|validity)[:\s]*'
+            r'(?:valid\s*(?:till|upto|to)|expiry\s*date|validity).*?'
             r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
 
-            # FULL capture: 28th of May 2024
             r'(\d{1,2}(?:st|nd|rd|th)?\s+of\s+'
             r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4})',
 
-            # FULL capture: 28 May 2024
             r'(\d{1,2}\s+'
             r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4})'
         ]
 
         expiry_date = "Not detected"
-        for pattern in patterns:
-            match = re.search(pattern, extracted_text, re.IGNORECASE)
-            if match:
-                expiry_date = match.group(1)
+        for p in patterns:
+            m = re.search(p, extracted_text, re.IGNORECASE)
+            if m:
+                expiry_date = m.group(1)
                 break
 
-
-                return jsonify({
+        return jsonify({
             "success": True,
             "expiry_date": expiry_date,
             "extracted_text": extracted_text
