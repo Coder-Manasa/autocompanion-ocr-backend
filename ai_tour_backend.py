@@ -11,9 +11,8 @@ import google.generativeai as genai
 # ❗ PUT YOUR VALID GEMINI API KEY HERE
 GEMINI_API_KEY = os.environ.get("AIzaSyA2HqvjsIpmXJXVz_3q69W9M_vONGdca3I")
 
-
-if not GEMINI_API_KEY or GEMINI_API_KEY.startswith("PUT_"):
-    raise ValueError("Please set your Gemini API key in GEMINI_API_KEY")
+# if not GEMINI_API_KEY or GEMINI_API_KEY.startswith("PUT_"):
+#     raise ValueError("Please set your Gemini API key in GEMINI_API_KEY")
 
 genai.configure(api_key=GEMINI_API_KEY)
 
