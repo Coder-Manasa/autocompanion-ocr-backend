@@ -1,15 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pytesseract
+
 import requests
 import cv2
-import numpy as np
-import re
-from PIL import Image
 from io import BytesIO
 
-# Path to Tesseract (Windows)
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 app = Flask(__name__)
 CORS(app)
